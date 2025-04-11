@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Inclusive Map</title>
+    <link rel="stylesheet" href="{% static 'map/styles.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+    <header>
+        <h2>Main</h2>
+        <div class="search">
+            <input type="text" placeholder="Search..." />
+            <button>🔍</button>
+        </div>
+        <nav>
+            <a href="">Add review</a>
+            <a href="/users/register/">Register</a>
+            <a href="/accounts/login/">Login</a>
+        </nav>
+    </header>
+
+    <section class="filters">
+        <!-- Фільтри якщо хочеш -->
+    </section>
+
+    <div id="map" style="height: 400px;"></div>
+    <div id="details-box" class="details">Оберіть місце на мапі або в списку.</div>
+
+     <form id="add-place-form" style="display: none;">
+        <div class="form-header">
+            <h3>Нове місце</h3>
+            <span id="close-form" class="close-button">✖</span>
+        </div>
+        <label>Назва:</label>
+        <input type="text" id="place-name" required>
+        <label>Опис:</label>
+        <textarea id="place-desc"></textarea>
+        <label><input type="checkbox" id="place-ramp"> Пандус</label><br>
+        <label><input type="checkbox" id="place-tactile"> Тактильні елементи</label><br>
+        <label><input type="checkbox" id="place-toilet"> Адаптований туалет</label><br>
+        <button type="submit">Додати місце</button>
+    </form>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="{% static 'map/map.js' %}"></script>
+
+</body>
+</html>
