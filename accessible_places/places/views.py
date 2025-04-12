@@ -13,18 +13,37 @@ def map_view(request):
 
 @csrf_exempt
 def add_place_api(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        form = PlaceForm(data)
-        if form.is_valid():
-            place = form.save(commit=False)
-            place.latitude = data.get('latitude')
-            place.longitude = data.get('longitude')
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            name = data.get("name")
+            description = data.get("description")
+            latitude = data.get("latitude")
+            longitude = data.get("longitude")
+            accessibility_score = data.get("accessibility_score", 0)  # за умовчанням 0
+
+            # Перевірка, чи всі необхідні поля присутні
+            if not name or not latitude or not longitude:
+                raise ValueError("Missing required fields")
+
+            # Створення об'єкта Place
+            place = Place(
+                name=name,
+                description=description,
+                latitude=latitude,
+                longitude=longitude,
+                accessibility_score=accessibility_score,
+                # додаткові поля, які ви маєте
+            )
             place.save()
-            print("PLACE CREATED:", place.name, place.latitude, place.longitude)
-            return JsonResponse({'success': True, 'place_id': place.id})
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+            return JsonResponse({"success": True})
+
+        except ValueError as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": "An error occurred"}, status=500)
 
 def places_api(request):
     places = Place.objects.all()

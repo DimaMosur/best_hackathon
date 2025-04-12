@@ -128,6 +128,32 @@ document.querySelector('.search button').addEventListener('click', () => {
   }
 });
 
+function handleDelete(placeId, marker) {
+  if (!confirm("Точно видалити це місце?")) return;
+
+  fetch(`/api/places/${placeId}/delete/`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken')
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      map.removeLayer(marker);
+      alert('Місце було успішно видалене!');
+      loadMarkers();  // Reload markers to reflect changes
+    } else {
+      alert("Помилка при видаленні місця.");
+    }
+  })
+  .catch(error => {
+    alert('Виникла помилка при видаленні місця. Спробуйте ще раз.');
+    console.error('Error:', error);
+  });
+}
+
+
 document.getElementById('add-place-form').addEventListener('submit', function (e) {
   e.preventDefault();
 
