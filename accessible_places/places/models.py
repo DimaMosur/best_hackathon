@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 
 class Place(models.Model):
+    accessibility_score = models.IntegerField(default=0)
     name = models.CharField(max_length=225)
     latitude = models.FloatField()
     longitude = models.FloatField()
@@ -11,6 +12,7 @@ class Place(models.Model):
     has_ramp = models.BooleanField(default=False)
     has_tactile_elements = models.BooleanField(default=False)
     has_adapted_toilet = models.BooleanField(default=False)
+    has_comfortable_exit = models.BooleanField(default=False)
 
     def average_rating(self):
         ratings = [review.rating for review in self.reviews.all()]

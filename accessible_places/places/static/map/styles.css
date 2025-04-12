@@ -134,3 +134,135 @@ nav a {
     color: white;
 }
 
+.accessibility-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.accessibility-list li {
+  padding: 4px 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.map-container {
+  display: flex;
+  padding: 10px 20px;
+  gap: 20px;
+}
+
+#map {
+  flex: 2;
+  height: 600px;
+  border-radius: 15px;
+}
+
+.filters-sidebar {
+  background: #1f1f1f;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 10px #000;
+  color: white;
+  width: 250px;
+  height: fit-content;
+}
+
+.filters-sidebar h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.filters-sidebar label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.filters-sidebar select {
+  width: 100%;
+  padding: 5px;
+  border-radius: 5px;
+  background: #2c2c2c;
+  color: white;
+  border: none;
+}
+
+.filters-sidebar button {
+  width: 100%;
+  margin-top: 5px;
+  padding: 10px;
+  background: #444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.filters-sidebar button:hover {
+  background: #666;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.close-button {
+  cursor: pointer;
+  font-size: 22px;
+  padding: 4px 10px;
+  background: #ff4444;
+  border-radius: 50%;
+  color: white;
+  transition: background 0.3s ease;
+}
+
+.close-button:hover {
+  background: #ff2222;
+}
+
+.accessibility-badge {
+  background-color: #28a745;
+  color: white;
+  padding: 4px 10px;
+  display: inline-block;
+  font-size: 14px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.accessibility-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.badge-green {
+  background-color: #4CAF50;
+}
+
+.badge-yellow {
+  background-color: #FFEB3B;
+  color: black;
+}
+
+.badge-orange {
+  background-color: #FF9800;
+}
+
+.badge-red {
+  background-color: #F44336;
+}
