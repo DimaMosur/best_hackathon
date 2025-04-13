@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пропозиції від користувачів</title>
+</head>
+<body>
+    <h1>Пропозиції щодо місць</h1>
+
+    {% for place in proposals_list %}
+        <div class="proposal">
+            <h2>{{ place.name }}</h2>
+            <ul>
+                {% for proposal in place.proposals %}
+                    <li>{{ proposal }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+
+    <a href="/">Повернутись на головну сторінку</a>
+</body>
+</html>

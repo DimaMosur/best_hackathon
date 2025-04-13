@@ -1,9 +1,10 @@
-let map = L.map('map').setView([50.45, 30.52], 13);
+let map = L.map('map').setView([49.84, 24.02], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let allMarkers = [];
 let allPlaces = [];
 let clickedLatLng = null;
+let currentRole = 'Користувач';
 
 const customIcon = L.icon({
   iconUrl: '/static/map/marker.png',
@@ -49,12 +50,11 @@ function renderMarkers(places) {
       const box = document.getElementById('details-box');
       const stars = '★'.repeat(Math.round(place.rating)) + '☆'.repeat(5 - Math.round(place.rating));
 
-      // Рівень доступності автоматично
       const level = calculateAccessibilityScore(place);
       const colorClass =
-        level === 4 ? 'badge-green' :
-        level === 3 ? 'badge-yellow' :
-        level === 2 ? 'badge-orange' : 'badge-red';
+          level === 4 ? 'badge-green' :
+          level === 3 ? 'badge-yellow' :
+          level === 2 ? 'badge-orange' : 'badge-red';
 
       const reviewsHtml = place.reviews.length > 0
         ? place.reviews.map(r => `<li>${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} – ${r.comment}</li>`).join('')
@@ -78,26 +78,41 @@ function renderMarkers(places) {
       `;
 
       const editBtn = document.createElement('button');
-      editBtn.textContent = "✏ Редагувати місце";
-      editBtn.classList.add('review-button');
-      editBtn.onclick = () => {
-        editingPlaceId = place.id;
-        clickedLatLng = { lat: place.lat, lng: place.lng };
-        document.getElementById('place-name').value = place.name;
-        document.getElementById('place-desc').value = place.description;
-        document.getElementById('place-ramp').checked = place.has_ramp;
-        document.getElementById('place-tactile').checked = place.has_tactile;
-        document.getElementById('place-toilet').checked = place.has_toilet;
-        document.getElementById('place-exit').checked = place.has_comfortable_exit;
-        document.getElementById('add-place-form').style.display = 'block';
-      };
+      if (currentRole === 'Адміністратор') {
+        editBtn.textContent = "✏ Редагувати місце";
+        editBtn.onclick = () => {
+          editingPlaceId = place.id;
+          clickedLatLng = { lat: place.lat, lng: place.lng };
+          document.getElementById('place-name').value = place.name;
+          document.getElementById('place-desc').value = place.description;
+          document.getElementById('place-ramp').checked = place.has_ramp;
+          document.getElementById('place-tactile').checked = place.has_tactile;
+          document.getElementById('place-toilet').checked = place.has_toilet;
+          document.getElementById('place-exit').checked = place.has_comfortable_exit;
+          document.getElementById('add-place-form').style.display = 'block';
+        };
+      } else {
+        editBtn.textContent = "Внести пропозицію";
+        editBtn.classList.add('proposal-button');
+        editBtn.onclick = () => {
+          editingPlaceId = place.id;
+          clickedLatLng = { lat: place.lat, lng: place.lng };
+          document.getElementById('place-name').value = place.name;
+          document.getElementById('place-desc').value = place.description;
+          document.getElementById('add-place-form').style.display = 'block';
+        };
+      }
+
       box.appendChild(editBtn);
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = "🗑 Видалити місце";
-      deleteBtn.classList.add('review-button', 'delete-btn');
-      deleteBtn.onclick = () => handleDelete(place.id, marker);
-      box.appendChild(deleteBtn);
+      // Admin can delete
+      if (currentRole === 'Адміністратор') {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "🗑 Видалити місце";
+        deleteBtn.classList.add('review-button', 'delete-btn');
+        deleteBtn.onclick = () => handleDelete(place.id, marker);
+        box.appendChild(deleteBtn);
+      }
     });
   });
 }
@@ -111,22 +126,83 @@ function loadMarkers() {
     });
 }
 
-document.querySelector('.search button').addEventListener('click', () => {
-  const value = document.querySelector('.search input').value.toLowerCase().trim();
-  if (!value) return;
+document.querySelector('#searchb').addEventListener('click', () => {
+  const value_dest = document.querySelector('#dest').value.toLowerCase().trim();
+  const value_start = document.querySelector('#start').value.toLowerCase().trim();
 
-  const found = allPlaces.find(p => p.name.toLowerCase().includes(value));
-  if (found) {
-    map.setView([found.lat, found.lng], 16);
+  if (!value_dest && !value_start) {
+    alert("Пошук пустий");
+    return;
+  }
+
+  const found_dest = value_dest ? allPlaces.find(p => p.name.toLowerCase().includes(value_dest)) : null;
+  const found_start = value_start ? allPlaces.find(p => p.name.toLowerCase().includes(value_start)) : null;
+
+  if (found_dest && found_start) {
+    if (window.routingControl) {
+      map.removeControl(window.routingControl);
+    }
+
+    window.routingControl = L.Routing.control({
+      waypoints: [
+        L.latLng(found_start.lat, found_start.lng),
+        L.latLng(found_dest.lat, found_dest.lng)
+      ],
+      router: L.Routing.osrmv1({
+        serviceUrl: 'https://router.project-osrm.org/route/v1'
+      }),
+      routeWhileDragging: true,
+      fitSelectedRoutes: true,
+    }).addTo(map);
+  } else if (found_dest) {
+    map.setView([found_dest.lat, found_dest.lng], 16);
     const marker = allMarkers.find(m => {
       const coords = m.getLatLng();
-      return coords.lat === found.lat && coords.lng === found.lng;
+      return coords.lat === found_dest.lat && coords.lng === found_dest.lng;
+    });
+    if (marker) marker.fire('click');
+  } else if (found_start) {
+    map.setView([found_start.lat, found_start.lng], 16);
+    const marker = allMarkers.find(m => {
+      const coords = m.getLatLng();
+      return coords.lat === found_start.lat && coords.lng === found_start.lng;
     });
     if (marker) marker.fire('click');
   } else {
-    alert("Місце не знайдено");
+    alert("Місць не знайдено");
+    return;
   }
 });
+
+document.querySelector('#dismiss').addEventListener('click', () => {
+  if (window.routingControl) {
+    map.removeControl(window.routingControl);
+  }
+  document.querySelector('#dest').value = '';
+  document.querySelector('#start').value = '';
+});
+
+function handleDelete(placeId, marker) {
+  if (!confirm("Точно видалити це місце?")) return;
+
+  fetch(`/api/places/${placeId}/delete/`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken')
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        map.removeLayer(marker);
+        document.getElementById('details-box').innerHTML = 'Місце видалено.';
+        loadMarkers();
+      } else {
+        alert("Помилка при видаленні місця.");
+      }
+    });
+}
+
 
 document.getElementById('add-place-form').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -166,7 +242,10 @@ document.getElementById('add-place-form').addEventListener('submit', function (e
       } else {
         alert("Помилка при збереженні місця");
       }
-    });
+    })
+      .catch(error => {
+        console.error('Помилка запиту:', error)
+      });
 });
 
 document.getElementById('close-form').addEventListener('click', () => {
@@ -210,3 +289,92 @@ map.on('click', function (e) {
 });
 
 loadMarkers();
+
+document.addEventListener("DOMContentLoaded", function () {  // Переконаймося, що DOM повністю завантажено
+  const roleButton = document.getElementById('role-button');
+  const roleDropdown = document.getElementById('role-dropdown');
+  const userRole = document.getElementById('user-role');
+  const adminRole = document.getElementById('admin-role');
+
+
+  if (roleButton) {
+    console.log("Role button found!");
+    roleButton.addEventListener('click', function () {
+      console.log('Role button clicked!');
+      roleDropdown.style.display = roleDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+  } else {
+    console.error("Role button not found!");
+  }
+
+  if (userRole) {
+    userRole.addEventListener('click', function () {
+      console.log('User role selected');
+      setRole('Користувач');
+    });
+  } else {
+    console.error("User role button not found!");
+  }
+
+  if (adminRole) {
+    adminRole.addEventListener('click', function () {
+      console.log('Admin role selected');
+      setRole('Адміністратор');
+    });
+  } else {
+    console.error("Admin role button not found!");
+  }
+});
+
+function setRole(role) {
+  console.log(`Setting role to: ${role}`);
+  currentRole = role;
+  const roleButton = document.getElementById('role-button');
+  const roleDropdown = document.getElementById('role-dropdown');
+
+  if (roleButton && roleDropdown) {
+    roleButton.innerHTML = `Роль: ${role}`;
+    roleDropdown.style.display = 'none'; // Закриваємо випадаюче меню після вибору
+
+    if (currentRole === 'Адміністратор') {
+      document.getElementById('edit-place-button').style.display = 'inline-block'; // Показати кнопку для адміністраторів
+      document.getElementById('suggest-place-button').style.display = 'none'; // Приховати для користувача
+    } else {
+      document.getElementById('edit-place-button').style.display = 'none'; // Приховати для адміністраторів
+      document.getElementById('suggest-place-button').style.display = 'inline-block'; // Показати для користувача
+    }
+  } else {
+    console.error("Elements for role setting are not found.");
+  }
+}
+
+document.getElementById('add-place-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const data = {
+    proposal: document.getElementById('place-desc').value // Просто використовуємо поле для опису пропозиції
+  };
+
+  fetch(`/api/places/${editingPlaceId}/proposal/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(data)
+  })
+    .then(res => res.json())
+    .then(json => {
+      if (json.success) {
+        alert("Пропозиція надіслана!");
+        document.getElementById('add-place-form').reset();
+        document.getElementById('add-place-form').style.display = 'none';
+        editingPlaceId = null;
+      } else {
+        alert("Помилка при надсиланні пропозиції");
+      }
+    })
+    .catch(error => {
+      console.error('Помилка запиту:', error)
+    });
+});
