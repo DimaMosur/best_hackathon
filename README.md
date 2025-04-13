@@ -53,7 +53,8 @@ Clone the repository and set up your environment:
 
 ```bash
 git clone git@github.com:DimaMosur/best_hackathon.git
-cd best_hackathon
+cd accessible_places
+pip install requirements.txt
 python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 python manage.py migrate
