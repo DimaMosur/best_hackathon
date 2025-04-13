@@ -13,6 +13,7 @@ class Place(models.Model):
     has_tactile_elements = models.BooleanField(default=False)
     has_adapted_toilet = models.BooleanField(default=False)
     has_comfortable_exit = models.BooleanField(default=False)
+    proposals = models.TextField(blank=True, null=True)
 
     def average_rating(self):
         ratings = [review.rating for review in self.reviews.all()]

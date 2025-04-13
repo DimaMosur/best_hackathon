@@ -78,8 +78,13 @@ nav a {
     color: #333;
 }
 
+<<<<<<< HEAD
 .review-button {
   display: inline-block;
+=======
+.review-button, .proposal-button {
+    display: inline-block;
+>>>>>>> 9a9047de4e99f498bc2e63abfe6c78f3f83a0dbc
     margin-top: 10px;
     padding: 10px 16px;
   background: linear-gradient(90deg, #f48fb1, #ce93d8);
@@ -90,8 +95,13 @@ nav a {
   transition: background 0.3s ease;
 }
 
+<<<<<<< HEAD
 .review-button:hover {
   background: linear-gradient(90deg, #f06292, #b39ddb);
+=======
+.review-button:hover, .proposal-button:hover {
+    background-color: #0b5ed7;
+>>>>>>> 9a9047de4e99f498bc2e63abfe6c78f3f83a0dbc
 }
 
 #add-place-form {
@@ -146,6 +156,7 @@ nav a {
     margin-bottom: 10px;
 }
 
+<<<<<<< HEAD
 .close-button {
   cursor: pointer;
     font-size: 20px;
@@ -253,6 +264,8 @@ cursor: pointer;
 background: #ff2222;
 }
 
+=======
+>>>>>>> 9a9047de4e99f498bc2e63abfe6c78f3f83a0dbc
 .accessibility-badge {
 background-color: #66bb6a;
   color: white;
@@ -311,3 +324,164 @@ nav a.active {
 background: linear-gradient(90deg, #f48fb1, #ce93d8);
   color: white;
 }
+
+.filters-sidebar {
+  background: #1f1f1f;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 10px #000;
+  color: white;
+  width: 250px;
+  height: fit-content;
+}
+
+.filters-sidebar h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.filters-sidebar label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.filters-sidebar select {
+  width: 100%;
+  padding: 5px;
+  border-radius: 5px;
+  background: #2c2c2c;
+  color: white;
+  border: none;
+}
+
+.filters-sidebar button {
+  width: 100%;
+  margin-top: 5px;
+  padding: 10px;
+  background: #444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.filters-sidebar button:hover {
+  background: #666;
+}
+
+/* Стилі для кнопки редагування */
+#edit-place-button {
+  background-color: #f1f1f1;
+  color: black;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+#edit-place-button:hover {
+    background-color: #ddd;
+}
+
+.role-selection {
+  position: absolute;
+  top: 20px;
+  right: 100px;
+  z-index: 1000; /* Make sure it's on top */
+}
+
+button, .role-selection button {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover, .role-selection button:hover, .filters-sidebar button:hover {
+    background-color: #0b5ed7;
+}
+
+/* Кнопка для вибору ролі */
+#role-button {
+    background-color: #f1f1f1;
+    color: black;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#role-button:hover {
+    background-color: #ddd;
+}
+
+#role-dropdown {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+}
+
+#role-dropdown button {
+    background-color: #f1f1f1;
+    color: black;
+    padding: 12px 16px;
+    text-align: left;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+}
+
+#role-dropdown button:hover {
+    background-color: #ddd;
+}
+
+/* Кнопка для виходу */
+button[type="submit"] {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover {
+    background-color: #c82333;
+}
+
+/* Стилі для кнопки "Запропонувати пропозицію" */
+#suggest-place-button {
+    background-color: #28a745;
+    margin-top: 20px;
+}
+
+#suggest-place-button:hover {
+    background-color: #218838;
+}
+
+.close-button {
+    cursor: pointer;
+    font-size: 20px;
+    float: right;
+    margin-top: -25px;
+    margin-right: 5px;
+    color: white;
+}
+
+.close-button:hover {
+    color: white;
+}
+

@@ -21,9 +21,20 @@ def add_place_api(request):
             description = data.get("description")
             latitude = data.get("latitude")
             longitude = data.get("longitude")
-            accessibility_score = data.get("accessibility_score", 0)  # за умовчанням 0
+            #accessibility_score = data.get("accessibility_score", 0)  # за умовчанням 0
 
-            # Перевірка, чи всі необхідні поля присутні
+            has_ramp = data.get("has_ramp", False)
+            has_tactile_elements = data.get("has_tactile_elements", False)
+            has_adapted_toilet = data.get("has_adapted_toilet", False)
+            has_comfortable_exit = data.get("has_comfortable_exit", False)
+
+            accessibility_score = calculate_accessibility_score({
+                'has_ramp': has_ramp,
+                'has_tactile_elements': has_tactile_elements,
+                'has_adapted_toilet': has_adapted_toilet,
+                'has_comfortable_exit': has_comfortable_exit
+            })
+
             if not name or not latitude or not longitude:
                 raise ValueError("Missing required fields")
 
@@ -33,8 +44,11 @@ def add_place_api(request):
                 description=description,
                 latitude=latitude,
                 longitude=longitude,
+                has_ramp=has_ramp,
+                has_tactile_elements=has_tactile_elements,
+                has_adapted_toilet=has_adapted_toilet,
+                has_comfortable_exit=has_comfortable_exit,
                 accessibility_score=accessibility_score,
-                # додаткові поля, які ви маєте
             )
             place.save()
             return JsonResponse({"success": True})
@@ -66,32 +80,60 @@ def places_api(request):
     ]
     return JsonResponse(data, safe=False)
 
+@login_required
 @csrf_exempt
 def update_place(request, place_id):
-    if request.method == 'PUT':
-        try:
-            data = json.loads(request.body)
-            place = get_object_or_404(Place, pk=place_id)
+    place = get_object_or_404(Place, pk=place_id)
 
-            place.name = data.get('name', place.name)
-            place.latitude = data.get('latitude', place.latitude)
-            place.longitude = data.get('longitude', place.longitude)
-            place.description = data.get('description', place.description)
-            place.has_ramp = data.get('has_ramp', place.has_ramp)
-            place.has_tactile_elements = data.get('has_tactile_elements', place.has_tactile_elements)
-            place.has_adapted_toilet = data.get('has_adapted_toilet', place.has_adapted_toilet)
-            place.has_comfortable_exit = data.get('has_comfortable_exit', place.has_comfortable_exit)
-            place.accessibility_score = calculate_accessibility_score(place)
-            place.save()
+    if request.user.groups.filter(name='Адміністрація').exists():
+        if request.method == 'PUT':
+            try:
+                data = json.loads(request.body)
 
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+                place.name = data.get('name', place.name)
+                place.latitude = data.get('latitude', place.latitude)
+                place.longitude = data.get('longitude', place.longitude)
+                place.description = data.get('description', place.description)
+                place.has_ramp = data.get('has_ramp', place.has_ramp)
+                place.has_tactile_elements = data.get('has_tactile_elements', place.has_tactile_elements)
+                place.has_adapted_toilet = data.get('has_adapted_toilet', place.has_adapted_toilet)
+                place.has_comfortable_exit = data.get('has_comfortable_exit', place.has_comfortable_exit)
+                place.accessibility_score = calculate_accessibility_score({
+                    'has_ramp': place.has_ramp,
+                    'has_tactile_elements': place.has_tactile_elements,
+                    'has_adapted_toilet': place.has_adapted_toilet,
+                    'has_comfortable_exit': place.has_comfortable_exit
+                })
+                place.save()
+
+                return JsonResponse({'success': True})
+
+            except json.JSONDecodeError:
+                return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
+            except KeyError as e:
+                return JsonResponse({'success': False, 'error': f'Missing required field: {e}'}, status=400)
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'}, status=500)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid HTTP method. Use PUT.'}, status=405)
 
     else:
-        return JsonResponse({'success': False}, status=400)
+        return JsonResponse({'success': False, 'error': 'Unauthorized. You need admin rights.'}, status=403)
 
-
+def add_proposal(request, place_id):
+    place = get_object_or_404(Place, id=place_id)
+    if request.method == 'POST':
+        proposal = request.POST.get('proposal')
+        if proposal:
+            if not place.proposals:
+                place.proposals = proposal  # Зберігаємо першу пропозицію
+            else:
+                place.proposals += f"\n{proposal}"  # Додаємо нову пропозицію до існуючих
+            place.save()
+            return JsonResponse({"success": True, "message": "Пропозиція надіслана"})
+        else:
+            return JsonResponse({"success": False, "message": "Пропозиція не може бути порожньою"})
+    return JsonResponse({"success": False, "message": "Невірний метод запиту"}, status=400)
 
 @login_required
 def add_review(request, place_id):
@@ -118,14 +160,38 @@ def delete_place_api(request, place_id):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'error': 'Place not found'}, status=400)
 
-def calculate_accessibility_score(place):
+def calculate_accessibility_score(data):
     score = 0
-    if place.has_ramp:
+    if data['has_ramp']:
         score += 1
-    if place.has_adapted_toilet:
+    if data['has_tactile_elements']:
         score += 1
-    if place.has_tactile_elements:
+    if data['has_adapted_toilet']:
         score += 1
-    if place.has_comfortable_exit:
+    if data['has_comfortable_exit']:
         score += 1
     return score
+
+def view_all_proposals(request):
+    if not request.user.groups.filter(name='Адміністратор').exists():
+        return JsonResponse({"error": "You do not have permission to view this page."}, status=403)
+
+    # Отримуємо всі місця з пропозиціями
+    places_with_proposals = Place.objects.filter(proposals__isnull=False)
+
+    # Перетворюємо дані місць у список пропозицій
+    proposals_list = []
+    for place in places_with_proposals:
+        proposals_list.append({
+            'name': place.name,
+            'proposals': place.proposals.split('\n')  # Розбиваємо пропозиції на список
+        })
+
+    return render(request, 'admin/proposals.html', {'proposals_list': proposals_list})
+
+def some_view(request):
+    # Перевірка чи є користувач в групі "Адміністратор"
+    is_admin = request.user.groups.filter(name='Адміністрація').exists()
+
+    # Передаємо це значення в шаблон
+    return render(request, 'index.html', {'is_admin': is_admin})

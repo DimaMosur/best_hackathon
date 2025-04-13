@@ -4,6 +4,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 let allMarkers = [];
 let allPlaces = [];
 let clickedLatLng = null;
+let currentRole = 'Користувач';
 
 const customIcon = L.icon({
   iconUrl: '/static/map/marker.png',
@@ -49,12 +50,11 @@ function renderMarkers(places) {
       const box = document.getElementById('details-box');
       const stars = '★'.repeat(Math.round(place.rating)) + '☆'.repeat(5 - Math.round(place.rating));
 
-      // Рівень доступності автоматично
       const level = calculateAccessibilityScore(place);
       const colorClass =
-        level === 4 ? 'badge-green' :
-        level === 3 ? 'badge-yellow' :
-        level === 2 ? 'badge-orange' : 'badge-red';
+          level === 4 ? 'badge-green' :
+          level === 3 ? 'badge-yellow' :
+          level === 2 ? 'badge-orange' : 'badge-red';
 
       const reviewsHtml = place.reviews.length > 0
         ? place.reviews.map(r => `<li>${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} – ${r.comment}</li>`).join('')
@@ -78,26 +78,41 @@ function renderMarkers(places) {
       `;
 
       const editBtn = document.createElement('button');
-      editBtn.textContent = "✏ Редагувати місце";
-      editBtn.classList.add('review-button');
-      editBtn.onclick = () => {
-        editingPlaceId = place.id;
-        clickedLatLng = { lat: place.lat, lng: place.lng };
-        document.getElementById('place-name').value = place.name;
-        document.getElementById('place-desc').value = place.description;
-        document.getElementById('place-ramp').checked = place.has_ramp;
-        document.getElementById('place-tactile').checked = place.has_tactile;
-        document.getElementById('place-toilet').checked = place.has_toilet;
-        document.getElementById('place-exit').checked = place.has_comfortable_exit;
-        document.getElementById('add-place-form').style.display = 'block';
-      };
+      if (currentRole === 'Адміністратор') {
+        editBtn.textContent = "✏ Редагувати місце";
+        editBtn.onclick = () => {
+          editingPlaceId = place.id;
+          clickedLatLng = { lat: place.lat, lng: place.lng };
+          document.getElementById('place-name').value = place.name;
+          document.getElementById('place-desc').value = place.description;
+          document.getElementById('place-ramp').checked = place.has_ramp;
+          document.getElementById('place-tactile').checked = place.has_tactile;
+          document.getElementById('place-toilet').checked = place.has_toilet;
+          document.getElementById('place-exit').checked = place.has_comfortable_exit;
+          document.getElementById('add-place-form').style.display = 'block';
+        };
+      } else {
+        editBtn.textContent = "Внести пропозицію";
+        editBtn.classList.add('proposal-button');
+        editBtn.onclick = () => {
+          editingPlaceId = place.id;
+          clickedLatLng = { lat: place.lat, lng: place.lng };
+          document.getElementById('place-name').value = place.name;
+          document.getElementById('place-desc').value = place.description;
+          document.getElementById('add-place-form').style.display = 'block';
+        };
+      }
+
       box.appendChild(editBtn);
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = "🗑 Видалити місце";
-      deleteBtn.classList.add('review-button', 'delete-btn');
-      deleteBtn.onclick = () => handleDelete(place.id, marker);
-      box.appendChild(deleteBtn);
+      // Admin can delete
+      if (currentRole === 'Адміністратор') {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "🗑 Видалити місце";
+        deleteBtn.classList.add('review-button', 'delete-btn');
+        deleteBtn.onclick = () => handleDelete(place.id, marker);
+        box.appendChild(deleteBtn);
+      }
     });
   });
 }
@@ -176,20 +191,16 @@ function handleDelete(placeId, marker) {
       'X-CSRFToken': getCookie('csrftoken')
     }
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      map.removeLayer(marker);
-      alert('Місце було успішно видалене!');
-      loadMarkers();  // Reload markers to reflect changes
-    } else {
-      alert("Помилка при видаленні місця.");
-    }
-  })
-  .catch(error => {
-    alert('Виникла помилка при видаленні місця. Спробуйте ще раз.');
-    console.error('Error:', error);
-  });
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        map.removeLayer(marker);
+        document.getElementById('details-box').innerHTML = 'Місце видалено.';
+        loadMarkers();
+      } else {
+        alert("Помилка при видаленні місця.");
+      }
+    });
 }
 
 
@@ -231,7 +242,10 @@ document.getElementById('add-place-form').addEventListener('submit', function (e
       } else {
         alert("Помилка при збереженні місця");
       }
-    });
+    })
+      .catch(error => {
+        console.error('Помилка запиту:', error)
+      });
 });
 
 document.getElementById('close-form').addEventListener('click', () => {
@@ -275,3 +289,92 @@ map.on('click', function (e) {
 });
 
 loadMarkers();
+
+document.addEventListener("DOMContentLoaded", function () {  // Переконаймося, що DOM повністю завантажено
+  const roleButton = document.getElementById('role-button');
+  const roleDropdown = document.getElementById('role-dropdown');
+  const userRole = document.getElementById('user-role');
+  const adminRole = document.getElementById('admin-role');
+
+
+  if (roleButton) {
+    console.log("Role button found!");
+    roleButton.addEventListener('click', function () {
+      console.log('Role button clicked!');
+      roleDropdown.style.display = roleDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+  } else {
+    console.error("Role button not found!");
+  }
+
+  if (userRole) {
+    userRole.addEventListener('click', function () {
+      console.log('User role selected');
+      setRole('Користувач');
+    });
+  } else {
+    console.error("User role button not found!");
+  }
+
+  if (adminRole) {
+    adminRole.addEventListener('click', function () {
+      console.log('Admin role selected');
+      setRole('Адміністратор');
+    });
+  } else {
+    console.error("Admin role button not found!");
+  }
+});
+
+function setRole(role) {
+  console.log(`Setting role to: ${role}`);
+  currentRole = role;
+  const roleButton = document.getElementById('role-button');
+  const roleDropdown = document.getElementById('role-dropdown');
+
+  if (roleButton && roleDropdown) {
+    roleButton.innerHTML = `Роль: ${role}`;
+    roleDropdown.style.display = 'none'; // Закриваємо випадаюче меню після вибору
+
+    if (currentRole === 'Адміністратор') {
+      document.getElementById('edit-place-button').style.display = 'inline-block'; // Показати кнопку для адміністраторів
+      document.getElementById('suggest-place-button').style.display = 'none'; // Приховати для користувача
+    } else {
+      document.getElementById('edit-place-button').style.display = 'none'; // Приховати для адміністраторів
+      document.getElementById('suggest-place-button').style.display = 'inline-block'; // Показати для користувача
+    }
+  } else {
+    console.error("Elements for role setting are not found.");
+  }
+}
+
+document.getElementById('add-place-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const data = {
+    proposal: document.getElementById('place-desc').value // Просто використовуємо поле для опису пропозиції
+  };
+
+  fetch(`/api/places/${editingPlaceId}/proposal/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(data)
+  })
+    .then(res => res.json())
+    .then(json => {
+      if (json.success) {
+        alert("Пропозиція надіслана!");
+        document.getElementById('add-place-form').reset();
+        document.getElementById('add-place-form').style.display = 'none';
+        editingPlaceId = null;
+      } else {
+        alert("Помилка при надсиланні пропозиції");
+      }
+    })
+    .catch(error => {
+      console.error('Помилка запиту:', error)
+    });
+});

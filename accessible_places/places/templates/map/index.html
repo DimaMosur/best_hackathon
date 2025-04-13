@@ -16,6 +16,14 @@
       <button id="searchb">🔍</button>
       <button id="dismiss">❌</button>
     </div>
+    <div class="role-selection" style="position: absolute; top: 20px; right: 100px;">
+        <button id="role-button">Вибрати роль</button>
+        <div id="role-dropdown" class="dropdown-content" style="display: none;">
+        <button id="user-role">Користувач</button>
+        <button id="admin-role">Адміністратор</button>
+        </div>
+    </div>
+
     <nav>
       {% if user.is_authenticated %}
         <form method="post" action="{% url 'logout' %}" style="display: inline;">
@@ -30,7 +38,7 @@
   </header>
 
   <div class="map-container">
-    <div id="map"></div>
+    <div id="map" style="height: 500px;"></div>
     <div class="filters-sidebar">
       <h3>Фільтри</h3>
       <label><input type="checkbox" id="filter-ramp"> Пандус</label>
@@ -70,7 +78,6 @@
     <label><input type="checkbox" id="place-exit"> Зручний вихід</label><br>
     <button type="submit">Додати місце</button>
   </form>
-
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="{% static 'map/map.js' %}"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
