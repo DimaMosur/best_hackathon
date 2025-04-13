@@ -9,10 +9,12 @@
 </head>
 <body>
   <header>
-    <h2>Main</h2>
+    <h2>🗺️</h2>
     <div class="search">
-      <input type="text" placeholder="Search..." />
-      <button>🔍</button>
+      <input type="text" id='dest' placeholder="Куди..." />
+      <input type="text" id='start' placeholder="Звідки..." />
+      <button id="searchb">🔍</button>
+      <button id="dismiss">❌</button>
     </div>
     <nav>
       {% if user.is_authenticated %}
@@ -71,5 +73,8 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="{% static 'map/map.js' %}"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
 </body>
 </html>
