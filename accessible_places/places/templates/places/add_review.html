@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Залишити відгук</title>
+  <link rel="stylesheet" href="{% static 'map/styles.css' %}">
+</head>
+<body>
+  <div class="details">
+    <h2>Залишити відгук для: {{ place.name }}</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      <label>Оцінка:</label>
+      <div id="star-rating">
+        <span class="star" data-value="1">☆</span>
+        <span class="star" data-value="2">☆</span>
+        <span class="star" data-value="3">☆</span>
+        <span class="star" data-value="4">☆</span>
+        <span class="star" data-value="5">☆</span>
+      </div>
+      <input type="hidden" name="rating" id="rating-input" required>
+
+      <label>Коментар:</label>
+      <textarea name="comment" rows="3"></textarea>
+
+      <button type="submit">Залишити</button>
+    </form>
+  </div>
+
+  <script>
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating-input');
+
+    stars.forEach(star => {
+      star.addEventListener('mouseover', () => {
+        const val = parseInt(star.dataset.value);
+        highlightStars(val);
+      });
+
+      star.addEventListener('mouseout', () => {
+        highlightStars(ratingInput.value);
+      });
+
+      star.addEventListener('click', () => {
+        const val = parseInt(star.dataset.value);
+        ratingInput.value = val;
+        highlightStars(val);
+      });
+    });
+
+    function highlightStars(value) {
+      stars.forEach(star => {
+        if (parseInt(star.dataset.value) <= value) {
+          star.textContent = '★';
+          star.classList.add('hovered');
+        } else {
+          star.textContent = '☆';
+          star.classList.remove('hovered');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

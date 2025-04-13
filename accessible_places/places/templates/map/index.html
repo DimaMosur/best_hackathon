@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Inclusive Map</title>
+  <link rel="stylesheet" href="{% static 'map/styles.css' %}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <header>
+    <h2>🗺️</h2>
+    <div class="search">
+      <input type="text" id='dest' placeholder="Куди..." />
+      <input type="text" id='start' placeholder="Звідки..." />
+      <button id="searchb">🔍</button>
+      <button id="dismiss">❌</button>
+    </div>
+    <div class="role-selection" style="position: absolute; top: 20px; right: 220px;">
+        <button id="role-button">Вибрати роль</button>
+        <div id="role-dropdown" class="dropdown-content" style="display: none;">
+        <button id="user-role">Користувач</button>
+        <button id="admin-role">Адміністратор</button>
+        </div>
+    </div>
+
+    <nav>
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit">LogOut</button>
+        </form>
+      {% else %}
+        <a href="/users/register/">Register</a>
+        <a href="/accounts/login/">Login</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <div class="map-container">
+    <div id="map" style="height: 500px;"></div>
+    <div class="filters-sidebar">
+      <h3>Фільтри</h3>
+      <label><input type="checkbox" id="filter-ramp"> Пандус</label>
+      <label><input type="checkbox" id="filter-toilet"> Адаптований Туалет</label>
+      <label><input type="checkbox" id="filter-tactile"> Тактильні елементи</label>
+      <label><input type="checkbox" id="filter-exit"> Зручний вихід</label>
+      <label>Рейтинг:
+        <select id="filter-rating">
+          <option value="0">Будь-який</option>
+          <option value="1">≥ 1★</option>
+          <option value="2">≥ 2★</option>
+          <option value="3">≥ 3★</option>
+          <option value="4">≥ 4★</option>
+          <option value="5">5★</option>
+        </select>
+      </label>
+      <button id="apply-filters">Застосувати</button>
+      <button id="clear-filters" type="button">Очистити</button>
+      <div id="filter-count" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+  </div>
+
+  <div id="details-box" class="details">Оберіть місце на мапі або в списку.</div>
+
+  <form id="add-place-form" style="display: none;">
+    <div class="form-header">
+      <h3>Нове місце</h3>
+      <span id="close-form" class="close-button">✖</span>
+    </div>
+    <label>Назва:</label>
+    <input type="text" id="place-name" required>
+    <label>Опис:</label>
+    <textarea id="place-desc"></textarea>
+    <label><input type="checkbox" id="place-ramp"> Пандус</label><br>
+    <label><input type="checkbox" id="place-tactile"> Тактильні елементи</label><br>
+    <label><input type="checkbox" id="place-toilet"> Адаптований туалет</label><br>
+    <label><input type="checkbox" id="place-exit"> Зручний вихід</label><br>
+    <button type="submit">Додати місце</button>
+  </form>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="{% static 'map/map.js' %}"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+</body>
+</html>
