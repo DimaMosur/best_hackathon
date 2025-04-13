@@ -1,4 +1,4 @@
-let map = L.map('map').setView([50.45, 30.52], 13);
+let map = L.map('map').setView([49.84, 24.02], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let allMarkers = [];
@@ -126,21 +126,60 @@ function loadMarkers() {
     });
 }
 
-document.querySelector('.search button').addEventListener('click', () => {
-  const value = document.querySelector('.search input').value.toLowerCase().trim();
-  if (!value) return;
+document.querySelector('#searchb').addEventListener('click', () => {
+  const value_dest = document.querySelector('#dest').value.toLowerCase().trim();
+  const value_start = document.querySelector('#start').value.toLowerCase().trim();
 
-  const found = allPlaces.find(p => p.name.toLowerCase().includes(value));
-  if (found) {
-    map.setView([found.lat, found.lng], 16);
+  if (!value_dest && !value_start) {
+    alert("Пошук пустий");
+    return;
+  }
+
+  const found_dest = value_dest ? allPlaces.find(p => p.name.toLowerCase().includes(value_dest)) : null;
+  const found_start = value_start ? allPlaces.find(p => p.name.toLowerCase().includes(value_start)) : null;
+
+  if (found_dest && found_start) {
+    if (window.routingControl) {
+      map.removeControl(window.routingControl);
+    }
+
+    window.routingControl = L.Routing.control({
+      waypoints: [
+        L.latLng(found_start.lat, found_start.lng),
+        L.latLng(found_dest.lat, found_dest.lng)
+      ],
+      router: L.Routing.osrmv1({
+        serviceUrl: 'https://router.project-osrm.org/route/v1'
+      }),
+      routeWhileDragging: true,
+      fitSelectedRoutes: true,
+    }).addTo(map);
+  } else if (found_dest) {
+    map.setView([found_dest.lat, found_dest.lng], 16);
     const marker = allMarkers.find(m => {
       const coords = m.getLatLng();
-      return coords.lat === found.lat && coords.lng === found.lng;
+      return coords.lat === found_dest.lat && coords.lng === found_dest.lng;
+    });
+    if (marker) marker.fire('click');
+  } else if (found_start) {
+    map.setView([found_start.lat, found_start.lng], 16);
+    const marker = allMarkers.find(m => {
+      const coords = m.getLatLng();
+      return coords.lat === found_start.lat && coords.lng === found_start.lng;
     });
     if (marker) marker.fire('click');
   } else {
-    alert("Місце не знайдено");
+    alert("Місць не знайдено");
+    return;
   }
+});
+
+document.querySelector('#dismiss').addEventListener('click', () => {
+  if (window.routingControl) {
+    map.removeControl(window.routingControl);
+  }
+  document.querySelector('#dest').value = '';
+  document.querySelector('#start').value = '';
 });
 
 function handleDelete(placeId, marker) {
